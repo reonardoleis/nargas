@@ -25,6 +25,6 @@ func main() {
 		panic(err)
 	}
 
-	transpiler.Transpile2JS(st)
+	transpiler.Transpile2Go(st)
 	fmt.Println(transpiler.Out)
 }

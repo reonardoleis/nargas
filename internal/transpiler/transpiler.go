@@ -11,7 +11,7 @@ func add(str string) {
 	Out += str
 }
 
-func Transpile2JS(node ast.Attrib) {
+func Transpile2Go(node ast.Attrib) {
 
 	if node == nil {
 		return
@@ -22,11 +22,11 @@ func Transpile2JS(node ast.Attrib) {
 		println()
 		return
 	default:
-		add(Node2JS(node))
+		add(Node2Go(node))
 	}
 
 	children := node.(ast.Node).Children()
 	for _, child := range children {
-		Transpile2JS(child)
+		Transpile2Go(child)
 	}
 }
