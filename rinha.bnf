@@ -1,0 +1,42 @@
+/* Lexical */
+
+id : 'a'-'z' {'a'-'z'} ;
+
+!whitespace : ' ' | '\t' | '\n' | '\r' ; 
+
+literal_integer  : '0' | '1'-'9' {'0'-'9'} ;
+
+/* Syntax */
+
+<< import "github.com/reonardoleis/nargas/internal/ast" >>
+
+
+
+Program: DeclarationList << ast.NewProgram($0) >> ;
+
+DeclarationList: Declaration ";" DeclarationList << ast.NewDeclarationList($0, $2) >> 
+    | empty << nil, nil >> ;
+
+Declaration: "let" id "=" Expr << ast.NewDeclaration($1, $3) >>
+    | "let" id "=" Function << ast.NewDeclaration($1, $3)  >> ;
+
+Literal: literal_integer << ast.NewLiteral($0) >> ;
+
+Expr: Literal << ast.NewExpr($0, nil, nil) >> 
+    | Literal "+" Literal << ast.NewExpr($0, $1, $2) >> ;
+
+Function: "fn" "(" FunctionParamList ")" "=>" Body  << ast.NewFunction($2, $5) >> ;
+
+FunctionParamList: id << ast.NewFunctionParamList($0, nil) >> 
+    | id "," FunctionParamList << ast.NewFunctionParamList($0, $2) >> ;
+
+Body: "{" CommandList "}" << ast.NewBody($1) >> ;
+
+CommandList: Command CommandList << ast.NewCommandList($0, $1) >> 
+    | Command ";" CommandList << ast.NewCommandList($0, $2) >>
+    | empty << nil, nil >> ;
+
+Command: id "=" Expr << ast.NewCommand(ast.NewCommandVarAssign($0, $2)) >>
+    | CommandReturn << ast.NewCommand($0) >> ;
+
+CommandReturn: id << ast.NewCommandReturn($0) >> ;
