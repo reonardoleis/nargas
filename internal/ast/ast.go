@@ -1,165 +1,116 @@
 package ast
 
-var _ = (Node)(&Program{})
-var _ = (Node)(&Declaration{})
-var _ = (Node)(&DeclarationList{})
-var _ = (Node)(&Literal{})
+import (
+	"encoding/json"
+	"fmt"
+)
 
-type Attrib interface {
+type Name struct {
+	Text string `json:"text"`
 }
 
-type Node interface {
-	Children() []Attrib
+type IValue interface {
+	Value()
 }
 
-type Program struct {
-	DeclarationList Attrib
+type Value struct {
+	IntVal  *int32
+	StrVal  *string
+	BoolVal *bool
+	TermVal *Term
 }
 
-func (p *Program) Children() []Attrib {
-	return []Attrib{p.DeclarationList}
+func (v *Value) Value() (interface{}, ValueType) {
+	if v.IntVal != nil {
+		return *v.IntVal, IntVal
+	}
+
+	if v.StrVal != nil {
+		return *v.StrVal, StrVal
+	}
+
+	if v.BoolVal != nil {
+		return *v.BoolVal, BoolVal
+	}
+
+	if v.TermVal != nil {
+		return v.TermVal, TermVal
+	}
+
+	return nil, ""
 }
 
-func NewProgram(declarationList Attrib) (*Program, error) {
-	return &Program{declarationList}, nil
+func (v Value) String() string {
+	val, _ := v.Value()
+	return fmt.Sprintf("%v", val)
 }
 
-type Declaration struct {
-	ID    Attrib
-	Value Attrib
+func (v *Value) UnmarshalJSON(b []byte) error {
+	var i int32
+	var s string
+	var b2 bool
+	var t Term
+
+	if err := json.Unmarshal(b, &i); err == nil {
+		v.IntVal = &i
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &s); err == nil {
+		v.StrVal = &s
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &b2); err == nil {
+		v.BoolVal = &b2
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &t); err == nil {
+		v.TermVal = &t
+		return nil
+	}
+
+	return fmt.Errorf("invalid value")
 }
 
-func (vd *Declaration) Children() []Attrib {
-	return []Attrib{vd.ID, vd.Value}
+type BinaryOp struct{}
+
+type Term struct {
+	Kind string `json:"kind"`
+	Name *Name  `json:"name"`
+
+	OnReturn bool `json:"-"`
+
+	// If
+	Condition *Value `json:"condition"`
+	Then      *Value `json:"then"`
+	Otherwise *Value `json:"otherwise"`
+
+	// Let
+	Value *Value `json:"value"`
+	Next  *Value `json:"next"`
+
+	// Binary
+	Lhs *Value `json:"lhs"`
+	Op  string `json:"op"`
+	Rhs *Value `json:"rhs"`
+
+	// Call
+	Callee    *Value   `json:"callee"`
+	Arguments []*Value `json:"arguments"`
+
+	// Function
+	Parameters []Name `json:"parameters"`
+
+	// Tuple
+	First  *Value `json:"first"`
+	Second *Value `json:"second"`
+
+	// Var
+	Text string `json:"text"`
 }
 
-func NewDeclaration(id, value Attrib) (*Declaration, error) {
-	return &Declaration{id, value}, nil
-}
-
-type DeclarationList struct {
-	Declaration Attrib
-	Next        Attrib
-}
-
-func (dl *DeclarationList) Children() []Attrib {
-	return []Attrib{dl.Declaration, dl.Next}
-}
-
-func NewDeclarationList(declaration, next Attrib) (*DeclarationList, error) {
-	return &DeclarationList{declaration, next}, nil
-}
-
-type Literal struct {
-	Value interface{}
-}
-
-func (l *Literal) Children() []Attrib {
-	return []Attrib{}
-}
-
-func NewLiteral(value Attrib) (*Literal, error) {
-	return &Literal{value}, nil
-}
-
-type Expr struct {
-	Left  Attrib
-	Op    Attrib
-	Right Attrib
-}
-
-func (e *Expr) Children() []Attrib {
-	return []Attrib{e.Left, e.Op, e.Right}
-}
-
-func NewExpr(left, op, right Attrib) (*Expr, error) {
-	return &Expr{left, op, right}, nil
-}
-
-type Function struct {
-	ParamList Attrib
-	Body      Attrib
-}
-
-func (f *Function) Children() []Attrib {
-	return []Attrib{f.ParamList, f.Body}
-}
-
-func NewFunction(paramList, body Attrib) (*Function, error) {
-	return &Function{paramList, body}, nil
-}
-
-type FunctionParamList struct {
-	Param Attrib
-	Next  Attrib
-}
-
-func (fpl *FunctionParamList) Children() []Attrib {
-	return []Attrib{fpl.Param, fpl.Next}
-}
-
-func NewFunctionParamList(param, next Attrib) (*FunctionParamList, error) {
-	return &FunctionParamList{param, next}, nil
-}
-
-type Body struct {
-	CommandList Attrib
-}
-
-func (b *Body) Children() []Attrib {
-	return []Attrib{b.CommandList}
-}
-
-func NewBody(commandList Attrib) (*Body, error) {
-	return &Body{commandList}, nil
-}
-
-type CommandList struct {
-	Command Attrib
-	Next    Attrib
-}
-
-func (cl *CommandList) Children() []Attrib {
-	return []Attrib{cl.Command, cl.Next}
-}
-
-func NewCommandList(command, next Attrib) (*CommandList, error) {
-	return &CommandList{command, next}, nil
-}
-
-type Command struct {
-	Value Attrib
-}
-
-func (c *Command) Children() []Attrib {
-	return []Attrib{c.Value}
-}
-
-func NewCommand(value Attrib) (*Command, error) {
-	return &Command{value}, nil
-}
-
-type CommandVarAssign struct {
-	ID    Attrib
-	Value Attrib
-}
-
-func (cva *CommandVarAssign) Children() []Attrib {
-	return []Attrib{cva.ID, cva.Value}
-}
-
-func NewCommandVarAssign(id, value Attrib) *CommandVarAssign {
-	return &CommandVarAssign{id, value}
-}
-
-type CommandReturn struct {
-	Value Attrib
-}
-
-func (cr *CommandReturn) Children() []Attrib {
-	return []Attrib{cr.Value}
-}
-
-func NewCommandReturn(value Attrib) (*CommandReturn, error) {
-	return &CommandReturn{value}, nil
+type AST struct {
+	Expression *Value `json:"expression"`
 }

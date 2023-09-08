@@ -1,0 +1,4 @@
+app
+a.out
+*.exe
+generated/*.go
