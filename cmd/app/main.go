@@ -11,16 +11,18 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		panic("Input file's name must be specified")
+
+	if len(os.Args) < 3 {
+		panic("Output language & input file's name must be specified")
 	}
 
 	outputFileName := "main"
-	if len(os.Args) > 2 {
-		outputFileName = os.Args[2]
+	if len(os.Args) > 3 {
+		outputFileName = os.Args[3]
 	}
 
 	file, _ := os.ReadFile(os.Args[1])
+	outputLanguage := os.Args[2]
 
 	ast := ast.AST{}
 	err := json.Unmarshal(file, &ast)
@@ -28,10 +30,10 @@ func main() {
 		panic(err)
 	}
 
-	transpiler := transpilerPkg.NewTranspiler(&ast, transpilerPkg.Go)
+	transpiler := transpilerPkg.NewTranspiler(&ast, transpilerPkg.OutputType(outputLanguage))
 	out := transpiler.Transpile()
 
-	f, err := os.Create("./generated/main.go")
+	f, err := os.Create("./generated/main." + outputLanguage)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +44,9 @@ func main() {
 		panic(err)
 	}
 
-	build.Generate(out, outputFileName, transpilerPkg.Go)
+	if outputLanguage == "go" {
+		build.Generate(out, outputFileName, transpilerPkg.Go)
+	}
 
 	fmt.Println("Transpiling done!")
 }

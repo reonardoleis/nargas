@@ -5,6 +5,7 @@ import (
 )
 
 var _ = (TranspilerStrategy)(GoStrategy{})
+var _ = (TranspilerStrategy)(JsStrategy{})
 
 type TranspilerStrategy interface {
 	Literal(val interface{}) string
@@ -17,4 +18,6 @@ type TranspilerStrategy interface {
 	FunctionPrototype(let ast.Term, function ast.Term, parameterList []ast.Name) string
 	VariablePrototype(let ast.Term) string
 	NeedsPrototype() bool
+	ConditionStart() string
+	ConditionEnd() string
 }

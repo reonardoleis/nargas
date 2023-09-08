@@ -6,7 +6,7 @@ import (
 	"github.com/reonardoleis/nargas/internal/ast"
 )
 
-var functions = `
+var functionsGo = `
 	func add(a, b any) any {
 		switch a.(type) {
 		case int:
@@ -215,7 +215,7 @@ func (g GoStrategy) VariablePrototype(let ast.Term) string {
 }
 
 func (g GoStrategy) Main(program string) string {
-	return fmt.Sprintf("package main\n\nimport \"fmt\"\n\n%s\n\nfunc main() {\n%s\n}", functions, program)
+	return fmt.Sprintf("package main\n\nimport \"fmt\"\n\n%s\n\nfunc main() {\n%s\n}", functionsGo, program)
 }
 
 func (g GoStrategy) Return() string {
@@ -228,4 +228,12 @@ func (g GoStrategy) PrintStart() string {
 
 func (g GoStrategy) PrintEnd() string {
 	return ")"
+}
+
+func (g GoStrategy) ConditionStart() string {
+	return ""
+}
+
+func (g GoStrategy) ConditionEnd() string {
+	return ""
 }

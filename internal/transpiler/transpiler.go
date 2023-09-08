@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/reonardoleis/nargas/internal/ast"
@@ -30,7 +31,11 @@ func NewTranspiler(in *ast.AST, outputType ...OutputType) *Transpiler {
 
 func (t *Transpiler) setStrategy(outputType OutputType) {
 	switch outputType {
+	case JS:
+		fmt.Println("Using JS")
+		t.TranspilerStrategy = &JsStrategy{}
 	default:
+		fmt.Println("Using Go")
 		t.TranspilerStrategy = &GoStrategy{}
 	}
 }
@@ -87,7 +92,9 @@ func (t *Transpiler) transpile(node *ast.Value) {
 
 		case If:
 			t.out += "\nif "
+			t.out += t.ConditionStart()
 			t.transpile(term.Condition)
+			t.out += t.ConditionEnd()
 			t.out += " {\n"
 			if term.Then != nil && term.Then.TermVal.Kind != Let {
 				t.out += t.Return()

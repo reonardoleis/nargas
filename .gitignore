@@ -2,3 +2,4 @@ app
 a.out
 *.exe
 generated/*.go
+generated/*.js
